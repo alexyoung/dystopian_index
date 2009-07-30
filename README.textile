@@ -36,7 +36,9 @@ h3. Plugin Design
 
 h3. Ideas
 
-It might be better to create separate indexes for each field.
+* It might be better to create separate indexes for each field.
+* order_by needs <code>desc</code>
+* Sorting fetches every matching ID from dystopia and sorts according to date integers.  There might be a better way to do this, but it's still pretty fast
 
 h3. Acknowledgements
 

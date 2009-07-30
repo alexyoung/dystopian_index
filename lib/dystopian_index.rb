@@ -76,6 +76,7 @@ module DystopianIndex
         @model.class_eval <<-RUBY
           include DystopianIndex::ModelMethods
           after_save :update_dystopian_index
+          before_destroy :remove_from_index
         RUBY
 
         @model.extend DystopianIndex::ModelClassMethods
@@ -197,10 +198,15 @@ module DystopianIndex
 
     def update_dystopian_index
       return if DystopianIndex.config.disabled
-
       with_dystopian_db do |db|
-        logger.info "Storing payload in model: #{dystopian_payload}" if DystopianIndex.debug
         db.store id, dystopian_payload
+      end
+    end
+
+    def remove_from_index
+      return if DystopianIndex.config.disabled
+      with_dystopian_db do |db|
+        db.delete id
       end
     end
 
