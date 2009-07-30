@@ -8,4 +8,5 @@ require File.join(fixtures_path, 'example_model')
 require File.join(fixtures_path, 'schema')
 
 Fixtures.create_fixtures(fixtures_path, ActiveRecord::Base.connection.tables)
+ExampleModel.clear_dystopian_index!
 ExampleModel.index_all

@@ -107,15 +107,25 @@ module DystopianIndex
       DystopianIndex.config.models[table_name]
     end
 
-    # Pagination?
-    # Limiting the number loaded to the paginated options will make this perform better
-    def search(text = '', options = {})
-      find search_ids(text, options)
+    # == Examples
+    #
+    # Simple text search:
+    #
+    #   User.search "name"
+    #
+    # With pagination:
+    #
+    #   User.search "name", :page => (params[:page]), :per_page => 10
+    #
+    def search(*args)
+      query = args.first
+      args = args.last.is_a?(Hash) ? args.last : {}
+      paginate_results search_ids(query, args), args
     end
 
-    def search_ids(text = '', options = {})
+    def search_ids(query, args = {})
       with_dystopian_db do |db|
-        sort_results db.search(text)
+        sort_results db.search(query), args
       end
     end
 
@@ -132,8 +142,23 @@ module DystopianIndex
     end
 
     # This will optionally use the date integer to sort results
-    def sort_results(ids)
+    def sort_results(ids, args)
       ids
+    end
+
+    def paginate_results(ids, args)
+      if args[:page] and defined?(WillPaginate)
+        args[:page]     = args[:page].to_i
+        args[:per_page] = args[:per_page].to_i
+
+        WillPaginate::Collection.create(args[:page], args[:per_page], ids.size) do |pager|
+          start = (args[:page] - 1) * args[:per_page]
+          pager.replace(find ids[args[:page], args[:per_page]])
+        end
+
+      else
+        find ids, args
+      end
     end
 
     def with_dystopian_db

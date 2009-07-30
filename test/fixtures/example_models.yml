@@ -3,5 +3,13 @@ alex:
   content: Software engineer based in London, England.
 yuka:
   name: Yuka Young
-  content: Bilingual videogames enthusiast.
-
+  content: Bilingual videogames enthusiast based in London.
+rowland:
+  name: Rowland Watkins
+  content: Programming and business consultant based in Hong Kong.
+kev:
+  name: Kevin Ford
+  content: Systems administrator currently based in Swindon, Wilts.
+simon:
+  name: Simon Starr
+  content: Rails developer based in Yorkshire.
