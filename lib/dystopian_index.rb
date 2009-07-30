@@ -83,9 +83,10 @@ module DystopianIndex
 
       def add_settings
         DystopianIndex.config.models[@model.table_name] = {
-          :fields => @fields,
-          :db     => @db_name,
-          :klass  => @model
+          :fields   => @fields,
+          :db       => @db_name,
+          :klass    => @model,
+          :order_by => @order_by
         }
       end
   end
@@ -120,13 +121,12 @@ module DystopianIndex
     def search(*args)
       query = args.first
       args = args.last.is_a?(Hash) ? args.last : {}
+      args[:order] = dystopian_config[:order_by]
       paginate_results search_ids(query, args), args
     end
 
     def search_ids(query, args = {})
-      with_dystopian_db do |db|
-        sort_results db.search(query), args
-      end
+      sort_results(with_dystopian_db { |db| db.search(query) })
     end
 
     def clear_dystopian_index!
@@ -141,9 +141,26 @@ module DystopianIndex
       end
     end
 
-    # This will optionally use the date integer to sort results
-    def sort_results(ids, args)
-      ids
+    def indexer_uses_timestamps?
+      return false unless dystopian_config[:order_by]
+      order_by = dystopian_config[:order_by].to_s
+      if columns_hash[order_by]
+        columns_hash[order_by].type == :datetime
+      end
+    end
+
+    # This will optionally use the date integer (specified by order_by) to sort results
+    def sort_results(ids, args = {})
+      if indexer_uses_timestamps?
+        records = []
+        with_dystopian_db do |db|
+         records = ids.collect { |id| [id, db.fetch(id)[0..12].to_i] }
+        end
+        records.sort! { |a, b| a[1] <=> b[1] }
+        records.collect { |a| a[0] }
+      else
+        ids
+      end
     end
 
     def paginate_results(ids, args)
@@ -153,9 +170,8 @@ module DystopianIndex
 
         WillPaginate::Collection.create(args[:page], args[:per_page], ids.size) do |pager|
           start = (args[:page] - 1) * args[:per_page]
-          pager.replace(find ids[args[:page], args[:per_page]])
+          pager.replace(find ids[start, args[:per_page]], :order => dystopian_config[:order_by])
         end
-
       else
         find ids, args
       end
@@ -193,11 +209,16 @@ module DystopianIndex
     end
 
     def dystopian_timestamps
-      read_attribute(:created_at).to_i
+      if self.class.indexer_uses_timestamps?
+        # to_f.to_i in case the value is DateTime
+        read_attribute(self.class.dystopian_config[:order_by]).to_f.to_i.to_s.ljust(13)
+      else
+        ''
+      end
     end
 
     def dystopian_payload
-      "#{dystopian_timestamps} #{dystopian_data}"
+      "#{dystopian_timestamps}#{dystopian_data}"
     end
   end
 
