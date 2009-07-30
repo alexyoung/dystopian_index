@@ -12,19 +12,19 @@ h3. Usage
 
 To use the plugin with a model, define an index like this:
 
-<code>
+<pre>
   dystopian_index do
     indexes :content, :name
     order_by :created_at
   end
-</code>
+</pre>
 
 h3. Rake Tasks
 
-<code>
+<pre>
 rake dystopia:benchmarks                  # Runs benchmarks
 rake dystopia:index                       # Indexes all models
-</code>
+</pre>
 
 h3. Plugin Design
 
