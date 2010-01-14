@@ -2,6 +2,13 @@ h2. DystopianIndex
 
 This is a Rails plugin that uses Tokyo Dystopia to index models.  It's ideal for small projects that need a fast indexer because it's easy to setup and understand, and doesn't use too many resources or daemon processes.
 
+h3. Requirements
+
+Gems:
+
+* faker
+* rufus-tokyo 
+
 h3. Installation
 
 Build and compile Tokyo Cabinet and Tokyo Dystopia from "tokyocabinet.sourceforge.net":http://tokyocabinet.sourceforge.net/ -- they're clean and simple C projects and should build on your Mac or Linux machine.
@@ -26,6 +33,8 @@ rake dystopia:benchmarks                  # Runs benchmarks
 rake dystopia:index                       # Indexes all models
 </pre>
 
+Database files are stored in <code>db/indexes</code>.  You can change the path where the database is stored by setting <code>DystopianIndex.config.db_path</code>.
+
 h3. Plugin Design
 
 * Each model has its own Dystopia index
@@ -34,8 +43,9 @@ h3. Plugin Design
 * Data information is stored in the first few bytes of each index record to help sort values
 * Indexes are stored in db/indexes/ -- the plugin will make this directory if required
 
-h3. Ideas
+h3. TODO
 
+* Tests only run from within a Rails app, and by executing each test file with ruby
 * It might be better to create separate indexes for each field.
 * order_by needs <code>desc</code>
 * Sorting fetches every matching ID from dystopia and sorts according to date integers.  There might be a better way to do this, but it's still pretty fast

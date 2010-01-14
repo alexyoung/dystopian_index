@@ -1,3 +1,5 @@
+require 'singleton'
+
 module DystopianIndex
   def self.debug ; true ; end
 
@@ -6,8 +8,11 @@ module DystopianIndex
   end
 
   def self.enable
-    ActiveRecord::Base.class_eval { include DystopianIndex }
     config.reset
+
+    if Object.const_defined? 'ActiveRecord'
+      ActiveRecord::Base.class_eval { include DystopianIndex }
+    end
   end
 
   def self.load_models
@@ -54,7 +59,7 @@ module DystopianIndex
     end
 
     def db_path
-      File.join DystopianIndex.config.app_root, 'db', 'indexes'
+      DystopianIndex.config.db_path
     end
 
     def order_by(field)
@@ -95,12 +100,13 @@ module DystopianIndex
   class Configuration
     include Singleton
 
-    attr_accessor :models, :app_root, :model_directories, :disabled
+    attr_accessor :models, :app_root, :model_directories, :disabled, :db_path
 
     def reset
       self.app_root          = RAILS_ROOT
       self.model_directories = ["#{app_root}/app/models/"]
       self.disabled          = false
+      self.db_path           = File.join(self.app_root, 'db', 'indexes')
     end
   end
 
@@ -121,6 +127,8 @@ module DystopianIndex
     #
     def search(*args)
       query = args.first
+      return if query.nil?
+
       args = args.last.is_a?(Hash) ? args.last : {}
       args[:order] = dystopian_config[:order_by]
       paginate_results search_ids(query, args), args
